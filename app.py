@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, s
 from pymongo import MongoClient
 from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from bson import ObjectId
 from datetime import datetime
 import os
@@ -47,12 +48,12 @@ def login():
 
         user = mongo.db.users.find_one({'username': username})
 
-        # if user and check_password_hash(user['password'], password):
-        session['user_id'] = str(user['_id'])
-        session['username'] = user['username']
-        session['role'] = user['role']
-        if session['role'] == 'admin':
-            return redirect(url_for('adminDashboard'))
+        if user and check_password_hash(user['password'], password):
+            session['user_id'] = str(user['_id'])
+            session['username'] = user['username']
+            session['role'] = user['role']
+            if session['role'] == 'admin':
+                return redirect(url_for('adminDashboard'))
     
         return redirect(url_for('customerDashboard'))
 
@@ -75,11 +76,12 @@ def add_to_cart(product_id):
 
     # Create a cart item
     cart_item = {
-        'user_id': session['user_id'],
-        'product_id': product['_id'],
-        'product_name': product['product_name'],
-        'price': product['price'],
-        'quantity': 1  # You can set the initial quantity as needed
+        "user_id": session["user_id"],
+        "product_id": product["_id"],
+        "product_name": product["product_name"],
+        "product_image_path": product["product_image_path"],
+        "price": product["price"],
+        "quantity": 1,  # You can set the initial quantity as needed
     }
 
     # Add the cart item to the carts collection
@@ -144,10 +146,11 @@ def add_to_favorites(product_id):
 
     # Create a favorites item
     favorites_item = {
-        'user_id': session['user_id'],
-        'product_id': product['_id'],
-        'product_name': product['product_name'],
-        'price': product['price'],
+        "user_id": session["user_id"],
+        "product_id": product["_id"],
+        "product_name": product["product_name"],
+        "product_image_path": product["product_image_path"],
+        "price": product["price"],
     }
 
     # Add the favorites item to the favorites collection
@@ -183,32 +186,39 @@ def adminDashboard():
 
 @app.route('/customer/dashboard')
 def customerDashboard():
+    products = mongo.db.products.find()
     if session['role'] == 'customer':
-        return render_template('customer.html')
+        return render_template('customer.html', products=products)
     return 'Access Denied'
 
 @app.route('/admin/products', methods=['GET', 'POST'])
 def products():
-    if session['role'] != 'admin':
-       return 'Access Denied'
-    if request.method == 'POST':
+    if session["role"] != "admin":
+        return "Access Denied"
+    if request.method == "POST":
         # Get product data from the form
-        product_id = request.form.get('product_id')
-        product_name = request.form.get('product_name')
-        price = request.form.get('price')
-        category = request.form.get('category')
+        product_id = request.form.get("product_id")
+        product_name = request.form.get("product_name")
+        price = request.form.get("price")
+        category = request.form.get("category")
 
         # Check if the 'product_image' file is present in the form
-        if 'product_image' in request.files:
-            product_image = request.files['product_image']
+        if "product_image" in request.files:
+            product_image = request.files["product_image"]
 
             # Save the file to the 'uploads' folder
-            upload_folder = app.config['UPLOAD_FOLDER']
+            upload_folder = app.config["UPLOAD_FOLDER"]
             if not os.path.exists(upload_folder):
                 os.makedirs(upload_folder)
 
-            product_image_path = os.path.join(upload_folder, product_image.filename)
+            filename = secure_filename(product_image.filename)
+            print(filename)
+            product_image_path = os.path.join(upload_folder, filename).replace(
+                "\\", "/"
+            )
             product_image.save(product_image_path)
+            print(product_image_path)
+            # print(product_image_path)
             product_image_path = product_image_path.replace("static/", "")
         else:
             # Handle the case where no image is provided
@@ -216,26 +226,28 @@ def products():
 
         # Create a dictionary representing the product
         product_data = {
-            'product_name': product_name,
-            'product_image_path': product_image_path,
-            'price': price,
-            'category': category
+            "product_name": product_name,
+            "product_image_path": product_image_path,
+            "price": price,
+            "category": category,
         }
 
         # Insert or update the product data into the 'products' collection
         if product_id:
             # If product_id is present, update the existing product
-            mongo.db.products.update_one({'_id': ObjectId(product_id)}, {'$set': product_data})
+            mongo.db.products.update_one(
+                {"_id": ObjectId(product_id)}, {"$set": product_data}
+            )
         else:
             # If product_id is not present, insert a new product
             mongo.db.products.insert_one(product_data)
 
         # Redirect to the product listing page or wherever you want
-        return redirect(url_for('products'))
+        return redirect(url_for("products"))
 
     # Display the product listing page
     products = mongo.db.products.find()
-    return render_template('products.html', products=products)
+    return render_template("products.html", products=products)
 
 # Render edit.html for editing a product
 @app.route('/admin/edit_product/<product_id>', methods=['GET'])
@@ -276,7 +288,10 @@ def update_product(product_id):
         if not os.path.exists(upload_folder):
             os.makedirs(upload_folder)
 
-        product_image_path = os.path.join(upload_folder, product_image.filename)
+        filename = secure_filename(product_image.filename)
+        product_image_path = os.path.join(upload_folder, filename).replace(
+                "\\", "/"
+            )
         product_image.save(product_image_path)
         product_image_path = product_image_path.replace("static/", "")
 

@@ -58,7 +58,7 @@
                     {% for product in favorites %}
                     <div class="box">
                         <div class="image">
-                            <img src="{{ url_for('static', filename=product.product_image_path) }}" alt="">
+                            <img src="{{ url_for('static', filename=product.product_image_path) }}" class="w-full h-full object-contain" alt="">
                             <div class="icons">
                                 <a href="{{ url_for('add_to_favorites', product_id=product._id) }}"
                                     class="fas fa-heart"></a>
@@ -74,6 +74,7 @@
                     </div>
                     {% endfor %}
                 </div>
+            </section>
         </div>
     </section>
 
