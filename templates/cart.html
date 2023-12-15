@@ -8,7 +8,8 @@
 
     <!-- font awesome cdn link -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
 
 
@@ -21,6 +22,19 @@
     <!-- header section starts -->
     <header>
 
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <script>
+                    Swal.fire({
+                        icon: '{{ category }}',
+                        title: 'Alert!',
+                        text: '{{ message }}',
+                    });
+                </script>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
         <input type="checkbox" name="" id="toggler">
         <label for="toggler" class="fas fa-bars"></label>
 

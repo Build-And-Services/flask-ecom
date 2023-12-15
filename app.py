@@ -88,7 +88,8 @@ def add_to_cart(product_id):
     mongo.db.carts.insert_one(cart_item)
 
     # Redirect to the product listing page or wherever you want
-    return redirect(url_for('hello'))
+    flash('Product placed successfully!', 'success')
+    return redirect(url_for('customerDashboard'))
 
 @app.route('/cart', methods=['GET', 'POST'])
 def cart():
@@ -378,7 +379,8 @@ def contact():
         })
 
         # Redirect to a thank you or confirmation page
-        return redirect(url_for('hello'))
+        flash('Message successfully sent!', 'success')
+        return redirect(url_for('customerDashboard'))
 
 if __name__ == '__main__':
     app.run(debug=True)
