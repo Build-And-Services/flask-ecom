@@ -143,6 +143,7 @@ def add_to_favorites(product_id):
     if not product:
         # Handle the case where the product is not found
         return redirect(url_for('products'))
+    
 
     # Create a favorites item
     favorites_item = {
@@ -153,11 +154,22 @@ def add_to_favorites(product_id):
         "price": product["price"],
     }
 
+    # print(favorites_item)
     # Add the favorites item to the favorites collection
     mongo.db.favorites.insert_one(favorites_item)
 
     # Redirect to the product listing page or wherever you want
-    return redirect(url_for('hello'))
+    return redirect(url_for('customerDashboard'))
+
+@app.route('/delete_to_favorites/<product_id>', methods=['GET'])
+def delete_to_favorites(product_id):
+    # Ensure the user is logged in
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    mongo.db.favorites.delete_one({"product_id": ObjectId(product_id), "user_id": session.get('user_id')})
+
+    return redirect(url_for("favorites"))
 
 # Route to show favorite products
 @app.route('/favorites')
