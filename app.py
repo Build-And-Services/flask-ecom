@@ -91,6 +91,16 @@ def add_to_cart(product_id):
     flash('Product placed successfully!', 'success')
     return redirect(url_for('customerDashboard'))
 
+@app.route('/delete_to_cart/<product_id>', methods=['GET'])
+def delete_to_cart(product_id):
+    # Ensure the user is logged in
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    mongo.db.carts.delete_one({"product_id": ObjectId(product_id), "user_id": session.get('user_id')})
+    flash('Deleted cart successfully!', 'success')
+    return redirect(url_for("cart"))
+
 @app.route('/cart', methods=['GET', 'POST'])
 def cart():
     # Ensure the user is logged in
@@ -169,7 +179,7 @@ def delete_to_favorites(product_id):
         return redirect(url_for('login'))
     
     mongo.db.favorites.delete_one({"product_id": ObjectId(product_id), "user_id": session.get('user_id')})
-
+    flash('Deleted favorite successfully!', 'success')
     return redirect(url_for("favorites"))
 
 # Route to show favorite products
@@ -331,6 +341,7 @@ def delete_product(product_id):
 
     # Delete the product from the database
     mongo.db.products.delete_one({'_id': ObjectId(product_id)})
+    mongo.db.favorites.delete_many({'product_id': ObjectId(product_id)})
 
     # Optionally, delete the associated image file from the server
     if 'product_image_path' in product:
