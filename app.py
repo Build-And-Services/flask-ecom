@@ -342,6 +342,7 @@ def delete_product(product_id):
     # Delete the product from the database
     mongo.db.products.delete_one({'_id': ObjectId(product_id)})
     mongo.db.favorites.delete_many({'product_id': ObjectId(product_id)})
+    mongo.db.carts.delete_many({'product_id': ObjectId(product_id)})
 
     # Optionally, delete the associated image file from the server
     if 'product_image_path' in product:
