@@ -36,8 +36,12 @@
         <div class="content">
             <h3>TechTrade Mobile</h3>
             <a href="{{ url_for('products') }}" class="btn">Products</a>
-            <a href="{{ url_for('orders') }}" class="btn">Orders</a>
-            <a href="{{ url_for('show_messages') }}" class="btn">Messages</a>
+            <a href="{{ url_for('orders') }}" class="btn">Orders
+                <span class="badge">3</span>
+            </a>
+            <a href="{{ url_for('show_messages') }}" class="btn">Messages
+                <span class="badge">3</span>
+            </a>
         </div>
 
     </section>
