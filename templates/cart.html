@@ -75,11 +75,14 @@
                 <div class="box">
                   <div class="image">
                     <img src="{{ url_for('static', filename=product.product_image_path) }}" class="w-full h-full object-contain" alt="" />
-                    <div class="icons">
-                      <a href="{{ url_for('add_to_favorites', product_id=product.product_id) }}" class="fas fa-heart"></a>
-                      <a href="#" class="cart-btn">Add to Cart</a>
-                      <a href="#" class="fas fa-share"></a>
-                    </div>
+                    <form action="{{ url_for('update_to_cart', product_id=product.product_id) }}" method="post">
+                      <div class="icons">
+                          <a href="{{ url_for('add_to_favorites', product_id=product.product_id) }}" class="fas fa-heart"></a>
+                          <input type="number" value="{{product.quantity}}" min="1" class="input-quantity" name="total_quantity">              
+                          <button type="submit" class="cart-btn">Save</button>
+                          <a href="#" class="fas fa-share"></a>
+                      </div>
+                    </form>
                   </div>
                   <div class="content">
                     <h3>{{ product.product_name }}</h3>
@@ -96,6 +99,7 @@
                     <thead>
                         <tr>
                             <th class="text-left font-bold text-gray-700">Products</th>
+                            <th class="text-center font-bold text-gray-700">Quantity</th>
                             <th class="text-right font-bold text-gray-700">Price</th>
                         </tr>
                     </thead>
@@ -103,6 +107,7 @@
                         {% for item in cart_items %}
                         <tr>
                             <td class="text-left text-gray-700">{{ item.product_name }}</td>
+                            <td class="text-center text-gray-700">{{ item.quantity }}</td>
                             <td class="text-right text-gray-700">${{ item.price }}</td>
                         </tr>
                         {% endfor %}
@@ -110,6 +115,7 @@
                     <tfoot>
                         <tr>
                             <td class="text-left font-bold text-gray-700">Total</td>
+                            <td class="text-center font-bold text-gray-700">{{total_quantity}}</td>
                             <td class="text-right font-bold text-gray-700">${{ total_price }}</td>
                         </tr>
                     </tfoot>

@@ -1,5 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, flash, jsonify
-from pymongo import MongoClient
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -112,6 +111,28 @@ def add_to_cart(product_id):
         flash('Product placed successfully!', 'success')
         return redirect(url_for('customerDashboard'))
 
+@app.route('/update_to_cart/<product_id>', methods=['POST'])
+def update_to_cart(product_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        total_quantity = int(request.form['total_quantity'])
+    # Find the product by its ObjectId
+        product = mongo.db.products.find_one({'_id': ObjectId(product_id)})
+        if not product:
+            # Handle the case where the product is not found
+            return redirect(url_for('hello'))
+
+        product = mongo.db.products.find_one({'_id': ObjectId(product_id)})
+        price = product['price']
+
+        mongo.db.carts.update_one({'product_id': ObjectId(product_id)}, {
+            "$set": {"quantity": total_quantity, "price": price * total_quantity}
+        })
+        flash('Cart Success Updated!', 'success')
+        return redirect(url_for('cart'))
+
 @app.route('/delete_to_cart/<product_id>', methods=['GET'])
 def delete_to_cart(product_id):
     # Ensure the user is logged in
@@ -135,6 +156,7 @@ def cart():
 
     # Calculate the total price
     total_price = sum(int(item['price']) for item in cart_items)
+    total_quantity = sum(int(item['quantity']) for item in cart_items)
 
     if request.method == 'POST':
         # Process the order and clear the cart
@@ -162,7 +184,7 @@ def cart():
         return redirect(url_for('cart'))
 
     # Render the cart template with the list of cart items and total price
-    return render_template('cart.html', cart_items=cart_items, total_price=total_price)
+    return render_template('cart.html', cart_items=cart_items, total_price=total_price, total_quantity=total_quantity)
 
 # Route to add a product to favorites
 @app.route('/add_to_favorites/<product_id>', methods=['GET'])
