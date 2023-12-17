@@ -369,8 +369,22 @@ def show_messages():
     # Retrieve all messages from the contact collection
     messages_cursor = mongo.db.messages.find()
     messages = list(messages_cursor)
+    mongo.db.messages.update_many(
+        {
+            "status": "new"
+        },
+        {
+            "$set": {'status': 'old'}
+        }
+    )
     # Render the template with the list of messages
     return render_template('messages.html', messages=messages)
+
+@app.route('/get_new_message')
+def get_new_message():
+    count = mongo.db.messages.count_documents({ 'status': 'new' })
+    response = {'count': count}
+    return response, 200
 
 @app.route('/contact', methods=[ 'POST'])
 def contact():
@@ -387,6 +401,7 @@ def contact():
             'email': email,
             'number': number,
             'message': message,
+            'status': 'new',
             'timestamp': datetime.utcnow()
         })
 
