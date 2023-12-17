@@ -128,7 +128,8 @@ def cart():
             'order_time': order_time,
             'total_products': total_products,
             'total_price': total_price,
-            'payment_method': payment_method
+            'payment_method': payment_method,
+            'status': "new"
         }
 
         mongo.db.orders.insert_one(order_data)
@@ -360,6 +361,14 @@ def orders():
     # Retrieve all orders from the orders collection
     orders_cursor = mongo.db.orders.find()
     orders = list(orders_cursor)
+    mongo.db.orders.update_many(
+        {
+            "status": "new"
+        },
+        {
+            "$set": {'status': 'old'}
+        }
+    )
     return render_template('order.html', orders=orders)
 
 @app.route('/admin/messages')
@@ -410,7 +419,7 @@ def contact():
         return redirect(url_for('customerDashboard'))
 
 @app.route('/get_new_orders')
-def get_new_message():
+def get_new_orders():
     count = mongo.db.orders.count_documents({ 'status': 'new' })
     response = {'count': count}
     return response, 200
