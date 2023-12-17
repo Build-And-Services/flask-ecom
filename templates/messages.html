@@ -44,12 +44,21 @@
           </thead>
           <tbody>
             {% for message in messages %}
-            <tr>
-              <td>{{ message.name }}</td>
-              <td>{{ message.email }}</td>
-              <td>{{ message.number }}</td>
-              <td>{{ message.message }}</td>
-            </tr>
+              {% if message.status == 'new' %}
+                <tr class="bg-blue-300">
+                  <td class="py-1 px-3">{{ message.name }}</td>
+                  <td class="py-1 px-3">{{ message.email }}</td>
+                  <td class="py-1 px-3">{{ message.number }}</td>
+                  <td class="py-1 px-3">{{ message.message }}</td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td class="py-1 px-3">{{ message.name }}</td>
+                  <td class="py-1 px-3">{{ message.email }}</td>
+                  <td class="py-1 px-3">{{ message.number }}</td>
+                  <td class="py-1 px-3">{{ message.message }}</td>
+                </tr>
+              {% endif %}
             {% endfor %}
           </tbody>
         </table>
