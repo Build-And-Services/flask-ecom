@@ -37,7 +37,7 @@
             <h3>TechTrade Mobile</h3>
             <a href="{{ url_for('products') }}" class="btn">Products</a>
             <a href="{{ url_for('orders') }}" class="btn">Orders
-                <span class="badge">3</span>
+                <span class="badge" id="notification"></span>
             </a>
             <a href="{{ url_for('show_messages') }}" class="btn">Messages
                 <span class="badge">3</span>
@@ -46,6 +46,21 @@
 
     </section>
     <!-- home section ends -->
+    <script>function fetchNewOrders() {
+        fetch('/get_new_orders')
+            .then(response => response.json())
+            .then(data => {
+                const notificationElement = document.getElementById('notification');
+                notificationElement.innerHTML = data.count;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+    
+    setInterval(fetchNewOrders, 5000);
+    fetchNewOrders();
+    </script>
 
 </body>
 

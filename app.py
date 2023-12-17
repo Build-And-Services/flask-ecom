@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, flash
+from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, flash, jsonify
 from pymongo import MongoClient
 from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -393,6 +393,12 @@ def contact():
         # Redirect to a thank you or confirmation page
         flash('Message successfully sent!', 'success')
         return redirect(url_for('customerDashboard'))
+
+@app.route('/get_new_orders')
+def get_new_message():
+    count = mongo.db.orders.count_documents({ 'status': 'new' })
+    response = {'count': count}
+    return response, 200
 
 if __name__ == '__main__':
     app.run(debug=True)
