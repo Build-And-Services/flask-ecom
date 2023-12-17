@@ -62,34 +62,55 @@ def login():
     return render_template('login.html')
 
 # Route to add a product to the cart
-@app.route('/add_to_cart/<product_id>', methods=['GET'])
+@app.route('/add_to_cart/<product_id>', methods=['POST'])
 def add_to_cart(product_id):
-    # Ensure the user is logged in
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
+    if request.method == 'POST':
+        total_quantity = int(request.form['total_quantity'])
     # Find the product by its ObjectId
-    product = mongo.db.products.find_one({'_id': ObjectId(product_id)})
-    if not product:
-        # Handle the case where the product is not found
-        return redirect(url_for('hello'))
+        product = mongo.db.products.find_one({'_id': ObjectId(product_id)})
+        if not product:
+            # Handle the case where the product is not found
+            return redirect(url_for('hello'))
 
-    # Create a cart item
-    cart_item = {
-        "user_id": session["user_id"],
-        "product_id": product["_id"],
-        "product_name": product["product_name"],
-        "product_image_path": product["product_image_path"],
-        "price": product["price"],
-        "quantity": 1,  # You can set the initial quantity as needed
-    }
+        # Lakukan pencarian produk berdasarkan ID
+        product = mongo.db.products.find_one({'_id': ObjectId(product_id)})
+        product_name = product['product_name']
+        price = product['price']
 
-    # Add the cart item to the carts collection
-    mongo.db.carts.insert_one(cart_item)
+        # cart = mongo.db.cart.find_one({'_id': ObjectId(cart_id)})
+        produk_di_keranjang = mongo.db.carts.find_one({'product_name': product_name})
+        total_harga_produk = total_quantity * price
 
-    # Redirect to the product listing page or wherever you want
-    flash('Product placed successfully!', 'success')
-    return redirect(url_for('customerDashboard'))
+        if produk_di_keranjang:
+            # Jika produk sudah ada di keranjang, update jumlah dan total harga
+            jumlah_sebelumnya = produk_di_keranjang['quantity']
+            total_harga_sebelumnya = produk_di_keranjang['price']
+
+            total_harga_baru = total_harga_sebelumnya + total_harga_produk
+            jumlah_baru = jumlah_sebelumnya + total_quantity
+
+            mongo.db.carts.update_one(
+                {'product_name': product_name},
+                {'$set': {'quantity': jumlah_baru, 'price': total_harga_baru}}
+            )
+
+        else:            # Jika produk belum ada di keranjang, tambahkan produk baru
+            cart_item = {
+                "user_id": session["user_id"],
+                "product_id": product["_id"],
+                "product_name": product["product_name"],
+                "product_image_path": product["product_image_path"],
+                "price": total_harga_produk,
+                "quantity": total_quantity ,  # You can set the initial quantity as needed
+            }
+            mongo.db.carts.insert_one(cart_item)
+
+        # Redirect to the product listing page or wherever you want
+        flash('Product placed successfully!', 'success')
+        return redirect(url_for('customerDashboard'))
 
 @app.route('/delete_to_cart/<product_id>', methods=['GET'])
 def delete_to_cart(product_id):
@@ -223,7 +244,7 @@ def products():
         # Get product data from the form
         product_id = request.form.get("product_id")
         product_name = request.form.get("product_name")
-        price = request.form.get("price")
+        price = int(request.form.get("price"))
         category = request.form.get("category")
 
         # Check if the 'product_image' file is present in the form

@@ -51,7 +51,9 @@
             .then(response => response.json())
             .then(data => {
                 const notificationElement = document.getElementById('notification');
-                notificationElement.innerHTML = data.count;
+                if (data.count > 0) {
+                    notificationElement.innerHTML = data.count;  
+                } 
             })
             .catch(error => {
                 console.error('Error:', error);
