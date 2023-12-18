@@ -68,49 +68,52 @@ def add_to_cart(product_id):
 
     if request.method == 'POST':
         total_quantity = int(request.form['total_quantity'])
-    # Find the product by its ObjectId
         product = mongo.db.products.find_one({'_id': ObjectId(product_id)})
         if not product:
             # Handle the case where the product is not found
             return redirect(url_for('hello'))
 
-        # Lakukan pencarian produk berdasarkan ID
-        product = mongo.db.products.find_one({'_id': ObjectId(product_id)})
         product_name = product['product_name']
         price = product['price']
 
-        # cart = mongo.db.cart.find_one({'_id': ObjectId(cart_id)})
-        produk_di_keranjang = mongo.db.carts.find_one({'product_name': product_name})
+        # Check if the product is already in the user's cart
+        cart_item = mongo.db.carts.find_one({
+            'user_id': session['user_id'],
+            'product_id': ObjectId(product_id)
+        })
+
         total_harga_produk = total_quantity * price
 
-        if produk_di_keranjang:
-            # Jika produk sudah ada di keranjang, update jumlah dan total harga
-            jumlah_sebelumnya = produk_di_keranjang['quantity']
-            total_harga_sebelumnya = produk_di_keranjang['price']
+        if cart_item:
+            # If the product is already in the cart, update the quantity and total price
+            jumlah_sebelumnya = cart_item['quantity']
+            total_harga_sebelumnya = cart_item['price']
 
             total_harga_baru = total_harga_sebelumnya + total_harga_produk
             jumlah_baru = jumlah_sebelumnya + total_quantity
 
             mongo.db.carts.update_one(
-                {'product_name': product_name},
+                {
+                    'user_id': session['user_id'],
+                    'product_id': ObjectId(product_id)
+                },
                 {'$set': {'quantity': jumlah_baru, 'price': total_harga_baru}}
             )
 
-        else:            # Jika produk belum ada di keranjang, tambahkan produk baru
+        else:  # If the product is not in the cart, add a new product
             cart_item = {
                 "user_id": session["user_id"],
-                "product_id": product["_id"],
+                "product_id": ObjectId(product_id),
                 "product_name": product["product_name"],
                 "product_image_path": product["product_image_path"],
                 "price": total_harga_produk,
-                "quantity": total_quantity ,  # You can set the initial quantity as needed
+                "quantity": total_quantity,
             }
             mongo.db.carts.insert_one(cart_item)
 
-        # Redirect to the product listing page or wherever you want
         flash('Product placed successfully!', 'success')
         return redirect(url_for('customerDashboard'))
-
+        
 @app.route('/update_to_cart/<product_id>', methods=['POST'])
 def update_to_cart(product_id):
     if 'user_id' not in session:
